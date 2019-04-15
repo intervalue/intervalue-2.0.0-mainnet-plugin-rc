@@ -19,7 +19,7 @@ function startRunning() {
     processWork.on("exit", (code, signal) => {
       OtherLog.warn(`Running进程退出，自动重新启动，Code：${signal}，Signal：${signal}`);
       cluster.setupMaster({
-        exec: wwwFileDependency,
+        exec: './www',
         silent: false
       });
       cluster.fork();
