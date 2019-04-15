@@ -10,7 +10,7 @@ The diamondnode contains a full ledge which is retrieved after reaching a consen
 * install redis
 * checkout diamondnode/db_server/config.js items in accordance with your actual mysql,redis 
 * open a port 9000(which allows lfnmatenode to have a connection) in the firewall
-* running diamondnode via typing "node bin/cluster.js"
+* running diamondnode via typing "node diamondnode/bin/cluster.js"
 
 
 
