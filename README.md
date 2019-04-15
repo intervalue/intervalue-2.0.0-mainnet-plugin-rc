@@ -6,7 +6,7 @@ The diamondnode contains a full ledge which is retrieved after reaching a consen
 
 ### installation/configuration/starting instruction
 * install nodejs 8.11.3 or above/dependent packages
-* install mysql,create custom database and run sql script file in **lfnmatenode/db_sever/db.sql**
+* install mysql,create custom database and run sql script file in **diamondnode/db_sever/db.sql**
 * install redis
 * checkout diamondnode/db_server/config.js items in accordance with your actual mysql,redis 
 * open a port 9000(which allows lfnmatenode to have a connection) in the firewall
