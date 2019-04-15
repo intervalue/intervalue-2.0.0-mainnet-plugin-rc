@@ -1,0 +1,12 @@
+.idea/
+node_modules/
+modules/api/cache/
+msgList.js
+modules/common/cache/
+public/uploads/
+public/vendor/
+log/
+bin/log
+bin/modules
+package-lock.json
+log.*
