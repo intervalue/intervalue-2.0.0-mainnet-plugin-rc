@@ -5,17 +5,14 @@
  */
 
 var app = require('../app');
-var debug = require('debug')('inve:server');
 var http = require('http');
 const TransactionsModel = require('../modules/common/model').Transactions;
 /**
  * 定时刷新
  */
-//setInterval(TransactionsModel.updateTransactionHistory,5 * 1000);
 setInterval(TransactionsModel.updateHashTransactions,20 * 1000);
 
 setInterval(TransactionsModel.updateAllTransactionHistory,5 * 1000);
-setInterval(TransactionsModel.getAccountMessage,5 * 1000);
 
 
 

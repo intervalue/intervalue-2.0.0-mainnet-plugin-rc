@@ -17,9 +17,6 @@ const sqlPromise = require('../../../util/commonSQLExec');
 const Bignumber = require('bignumber.js');
 const redis = require('../../../util/common')
 var Transaction_indexModel = new Transaction_index();
-const config = require('../../../util/config')
-const Accounts_messages = require('../../common/model').Accounts_messages;
-//fs.appendFileSync(log_path + 'sql-' + moment().format("MM-DD") + '.log', moment().format("MM-DD H:m:s") + "  " + sql + "\n");
 
 let tranList = [];
 /*用户基本类型*/
@@ -130,26 +127,6 @@ async function getHashResult (hash){
     }
 }
 
-
-/**
- * 调用共识网接口查询TPs
- * @returns {Promise<*>}
- */
-Transations.prototype.getMessageInfo = async () =>{
-    try{
-        let pubkey ='AoulFnsMkNo1HFZHTQ1SzWwgFVlwVHF39O17FBDs8vIj';
-        let localfullnode = await common.getLocalfullnode(pubkey);
-        if(!localfullnode) return null;
-        let result = JSON.parse(await webHelper.httpPost(getUrl(localfullnode, '/v1/getmessageInfo'), null, {}));
-        //console.log(result)
-        if(result.code == 200 && result.data != ''){
-            return JSON.parse(result.data);
-        }
-    }catch (e) {
-        console.log('getHashResult: ',e.toString());
-        return null;
-    }
-}
 
 /**
  * 更新所有交易记录
@@ -362,28 +339,6 @@ async function getAllTransactionHistory(localfullnode, address, tableIndex, offs
 }
 
 
-/**
- * 从共识网获取交易记录
- * @param localfullnode
- * @param address
- * @param tableIndex
- * @param offset
- * @returns {Promise<*>}
- */
-async function getTransactionHistory(localfullnode, address, tableIndex, offset) {
-    let type = [1, 2];
-    let resultMessage = JSON.parse(await webHelper.httpPost(getUrl(localfullnode, '/v1/gettransactionlist'), null, buildData({ address,tableIndex,offset, type })));
-    let result = resultMessage.data;
-    if(resultMessage.code == 200) {
-        result = JSON.parse(result);
-        tableIndex = result.tableIndex?result.tableIndex:0;
-        offset     = result.offset?result.offset:0;
-        return result.list? {result:result.list,tableIndex,offset,address}:{result:[],tableIndex,offset,address};
-    }else {
-        return {result:[],tableIndex,offset,address}
-    }
-}
-
 
 /**
  * 初始本地交易记录
@@ -444,137 +399,7 @@ Transations.prototype.getTransactionList = async (opts, cb) => {
     }
 }
 
-/**
- * 根据type类型获取
- * @param opts
- * @param cb
- * @returns {Promise<void>}
- */
-Transations.prototype.getAllTransactionList = async (opts, cb) => {
-    let sql ="select * from t_transactions_0 where 1=1";
-    let value = [];
-    if(opts.type) {
-        sql +=" and type=?";
-        value.push(opts.type)
-    }
-    value.push((opts.page-1)*opts.pageSize);
-    value.push(opts.pageSize);
-    sql+=" order by creation_date desc LIMIT ?,?";
-    try{
-        let result = await sqlPromise.promiseSqlWithParameters(sql,value);
-        if(result.length > 0){
-            for(let i of result){
-                i.amount = new Bignumber(i.amount).plus((new Bignumber(i.amount_point)).div(new Bignumber(config.INVEValue.toString()))).toFixed();
-            }
-        }
-        cb(null, result)
-    }catch (e) {
-        cb(e.toString());
-    }
-}
 
-
-/**
- * 获取总交易数据
- * @param opts
- * @param cb
- * @returns {Promise<void>}
- */
-Transations.prototype.getAllTransactionListPage = async (opts, cb) => {
-    let sql ="select count(*) as t from t_transactions_0 where 1=1";
-    if(opts.type) {
-        sql +=" and type="+opts.type;
-    }
-
-    try{
-        let totalCount = await sqlPromise.promiseSql(sql);
-        cb(null, totalCount[0].t)
-    }catch (e) {
-        cb(e.toString());
-    }
-}
-
-/**
- * 根据hash或adress查询交易记录
- * @param opts
- * @param cb
- * @returns {Promise<void>}
- */
-Transations.prototype.getHashTransaction = async (opts, cb) => {
-    let sql ="select *, cast(amount_point as CHAR ) as amount_point,cast(fee_point as CHAR ) as fee_point from t_transactions_0 where 1=1   AND ";
-    let sql1 ="select count(*) as t from t_transactions_0 where 1=1   and";
-    let limit;
-    let value = [];
-    let value1 = [];
-    let address = false;
-    Object.keys(opts).forEach(function(key){
-        if(key !='page' && key !='limit' && key !='address'){
-            sql +=` ${key}=?`;
-            value.push(opts[key]);
-        }else if(key =='address'){
-            address = true;
-            sql +=' addressFrom=? or addressTo=?';
-            sql1 +=' addressFrom=? or addressTo=?';
-            value.push(opts[key]);
-            value.push(opts[key]);
-            value1.push(opts[key]);
-            value1.push(opts[key]);
-        }else if(key =='page'){
-            sql +=" order by creation_date DESC ";
-            limit=" limit ?,?";
-            value.push((Number(opts[key])-1)*Number(opts['limit']));
-            value.push(Number(opts['limit']));
-            sql += limit;
-        }
-    });
-
-    let obj ={};
-    let isLimit = sql.match(/limit/);
-    if(!isLimit) {
-        sql +=" order by creation_date DESC ";
-        sql +=' limit 0,10';
-    }
-    try{
-        let res = await sqlPromise.promiseSqlWithParameters(sql,value);
-
-        if(!address){
-            obj = res[0];
-            if(obj){
-                obj.amount = new Bignumber(obj.amount.toString()).plus(new Bignumber(obj.amount_point.toString()).div(new Bignumber(config.INVEValue.toString()))).toFixed();
-                obj.fee = new Bignumber(obj.fee.toString()).plus((new Bignumber(obj.fee_point.toString())).div(new Bignumber(config.INVEValue.toString()))).toFixed();
-            }else {
-                obj = {};
-                obj.amount = 0;
-                obj.fee = 0;
-            }
-        }else {
-            let res1 = await sqlPromise.promiseSqlWithParameters(sql1,value);
-            obj.currPage = opts.page || 1;
-            obj.pageSize = opts.limit || 10;
-            obj.totalCount = res1[0].t;
-            obj.totalPage = Math.ceil(res1[0].t/(opts.limit || 10));
-            obj.list = formatTrans(res);
-        }
-        cb(null, obj)
-    }catch (e) {
-        cb(e.toString());
-    }
-}
-
-/**
- * 格式化金额
- * @param res
- * @returns {*}
- */
-function formatTrans(res){
-    for(let i of res){
-        i.amount = new Bignumber(i.amount).plus((new Bignumber(i.amount_point)).div(new Bignumber(config.INVEValue.toString()))).toFixed();
-        i.fee = new Bignumber(i.fee).plus((new Bignumber(i.fee_point)).div(new Bignumber(config.INVEValue.toString()))).toFixed();
-
-    }
-    //console.log(res)
-    return res;
-}
 
 /**
  * 获取账户余额
@@ -619,63 +444,6 @@ Transations.prototype.getBalance = async  (address, cb) => {
 
 }
 
-/**
- * 查询地址余额
- * @param address
- * @param cb
- * @returns {Promise<*>}
- */
-// Transations.prototype.getBalance = async (address,cb) =>{
-//     if(address ==''){
-//         return cb(0)
-//     }
-//     let pubkey ='AoulFnsMkNo1HFZHTQ1SzWwgFVlwVHF39O17FBDs8vIj';
-//     let localfullnode = await common.getLocalfullnode(pubkey);
-//     if(!localfullnode) return cb(`localfullnode is null`);
-//     try{
-//         let result = JSON.parse(await webHelper.httpPost(getUrl(localfullnode, '/v1/account/info'), null, buildData({address})));
-//         //console.log(result)
-//         let data = JSON.parse(result.data)
-//         cb(null, data.balance ==0 ? 0 : new Bignumber(data.balance.toString()).div(new Bignumber("1000000000000000000")).toFixed());
-//     }catch (e) {
-//         cb(e.toString())
-//     }
-// }
-
-
-/**
- * 获取地址信息
- * @returns {Promise<void>}
- */
-Transations.prototype.getAccountMessage = async () => {
-    let sql ="select count(*) as t from t_transactions_0";
-    let sql1 ="select count(*) as t from (select addressFrom as address from t_transactions_0 UNION select  addressTo from t_transactions_0 )a where address <>''"
-    try{
-        let res = await sqlPromise.promiseSql(sql);
-        let res1 = await sqlPromise.promiseSql(sql1);
-        Redis.set('messageTotal',res[0].t);
-        Redis.set('accountsTotal',res1[0].t);
-        let a = await redis.getRedis(`message${moment().format('YYYY-MM-DD')}`);
-        if(!a) {
-            let res2 = await sqlPromise.promiseSqlWithParameters("select * from t_accounts_messages  where creation_date_day=? order by creation_date_day DESC ", [moment().format('YYYY-MM-DD')]);
-            let obj = {
-                creation_date_day: moment().format('YYYY-MM-DD'),
-                messageTotal: res[0].t,
-                accountsTotal: res1[0].t,
-                creation_date: Math.round(Date.now())
-            }
-            if (res2.length > 0) {
-                Redis.set(`message${moment().format('YYYY-MM-DD')}`, `${res[0].t}-${res1[0].t}`);
-            } else {
-                let sqlAcount = "insert into t_accounts_messages (creation_date_day,messageTotal,accountsTotal,creation_date) values (?,?,?,?)";
-                await sqlPromise.promiseSqlWithParameters(sqlAcount, [obj.creation_date_day, obj.messageTotal, obj.accountsTotal, obj.creation_date])
-                Redis.set(`message${moment().format('YYYY-MM-DD')}`, `${res[0].t}-${res1[0].t}`);
-            }
-        }
-    }catch (e) {
-        console.log('getAccountMessage: ',e.toString());
-    }
-}
 
 //组装访问共识网的url
 let getUrl = (localfullnode, suburl) => {
