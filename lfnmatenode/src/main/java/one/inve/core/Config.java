@@ -10,9 +10,6 @@ public class Config {
     public static final String DEFAULT_SEED_PUBIP = "http://34.220.63.1";
     public static final String DEFAULT_SEED_HTTP_PORT   = "25003";
 
-    public static final String DEFAULT_NODE_PUBIP = "http://172.17.2.222";
-    public static final String DEFAULT_NODE_HTTP_PORT   = "9000";
-
     public static final int DEFAULT_HTTP_PORT = 35797;
     public static final String DEFAULT_PUBKEY = "At2iEH/cm8epCk+vEGLh+7wV2I05jKab6xwsIjU5vBHo";
 

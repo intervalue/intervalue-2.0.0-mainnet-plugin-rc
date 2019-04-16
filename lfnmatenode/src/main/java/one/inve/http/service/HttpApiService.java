@@ -76,9 +76,14 @@ public class HttpApiService {
             logger.error("parameter is empty.");
             return ResponseUtils.paramIllegalResponse();
         }
+        LocalFullNode lfn = getlocalfullnode();
+        if (null == lfn) {
+            logger.error("sendMessage localfullnode is null");
+            return ResponseUtils.handleExceptionResponse();
+        }
         try {
             String trans = null;
-            String url = Config.DEFAULT_NODE_PUBIP + ":" + Config.DEFAULT_NODE_HTTP_PORT + Config.GET_MESSAGE_LIST_URI;
+            String url = "http://" + lfn.getIp() + ":" + lfn.getHttpPort()+ Config.GET_MESSAGE_LIST_URI;
             trans = HttpUtils.httpPost(url, data);
             return (null == trans) ? "" : trans;
         } catch (Exception e) {
@@ -101,87 +106,18 @@ public class HttpApiService {
             logger.error("parameter is empty.");
             return ResponseUtils.paramIllegalResponse();
         }
+        LocalFullNode lfn = getlocalfullnode();
+        if (null == lfn) {
+            logger.error("sendMessage localfullnode is null");
+            return ResponseUtils.handleExceptionResponse();
+        }
         try {
             String message = null;
-            String url = Config.DEFAULT_NODE_PUBIP + ":" + Config.DEFAULT_NODE_HTTP_PORT + Config.GET_MESSAGE_URI;
+            String url = "http://" + lfn.getIp() + ":" + lfn.getHttpPort() + Config.GET_MESSAGE_URI;
             message = HttpUtils.httpPost(url, data);
             return (null == message) ? "" : message;
         } catch (Exception e) {
             logger.error("getMessage handle error: {}", e);
-            return ResponseUtils.handleExceptionResponse();
-        }
-    }
-
-
-    @RequestMapper(value = "/v1/wallet/gen", method = MethodEnum.POST)
-    public String newWallet(DataMap<String, Object> data) {
-        logger.info("new wallet ... data: {}", JSON.toJSONString(data));
-        try {
-            wallet = WalletBuilder.generateWallet();
-            JSONObject walletJson = new JSONObject();
-            walletJson.put("pubKey", wallet.getExtKeys().getPubKey());
-            walletJson.put("priKey", wallet.getExtKeys().getPrivKey());
-            walletJson.put("words", wallet.getMnemonic());
-            walletJson.put("address", wallet.getAddress());
-            return ResponseUtils.normalResponse((null == walletJson) ? "" : JSON.toJSONString(walletJson));
-        } catch (Exception e) {
-            logger.error("newWallet handle error:{}", e);
-            return ResponseUtils.handleExceptionResponse();
-        }
-    }
-
-    @RequestMapper(value = "/v1/wallet/sign", method = MethodEnum.POST)
-    public String newSignMessage(DataMap<String, Object> data) {
-        logger.info("new sign message ... data: {}", JSON.toJSONString(data));
-        if (null == data || data.isEmpty()) {
-            logger.error("parameter is empty.");
-            return ResponseUtils.paramIllegalResponse();
-        }
-        String words = data.getString("words");
-        if (StringUtils.isEmpty(words)) {
-            logger.error("parameter is empty.");
-            return ResponseUtils.paramIllegalResponse();
-        }
-        String fromAddress = data.getString("fromAddress");
-        if (StringUtils.isEmpty(fromAddress)) {
-            logger.error("parameter is empty.");
-            return ResponseUtils.paramIllegalResponse();
-        }
-        String toAddress = data.getString("toAddress");
-        if (StringUtils.isEmpty(toAddress)) {
-            logger.error("parameter is empty.");
-            return ResponseUtils.paramIllegalResponse();
-        }
-        String amountStr = data.getString("amount");
-        BigInteger amount = new BigInteger(amountStr);
-        if (null == amount) {
-            logger.error("parameter is empty.");
-            return ResponseUtils.paramIllegalResponse();
-        }
-        if (amount.compareTo(BigInteger.ZERO) <= 0) {
-            logger.error("amount is illegal");
-            return ResponseUtils.paramIllegalResponse();
-        }
-        try {
-            String url = Config.DEFAULT_SEED_PUBIP + ":" + Config.DEFAULT_SEED_HTTP_PORT + Config.GET_NRG_PRICE_URI;
-            String resultStr = HttpUtils.httpPost(url, new HashMap<>());
-            if (StringUtils.isEmpty(resultStr)) {
-                return ResponseUtils.handleExceptionResponse();
-            }
-            JSONObject resultJson = JSONObject.parseObject(resultStr);
-            if (200 != resultJson.getInteger("code")) {
-                return ResponseUtils.handleExceptionResponse();
-            }
-            BigInteger nrgPrice = BigInteger.valueOf(Long.valueOf(JSONObject.parseObject(resultJson.getString("data")).getString("nrgPrice")));
-            if (null == nrgPrice || nrgPrice.compareTo(BigInteger.ZERO) <= 0) {
-                throw new RuntimeException("nrgPrice is illegal.");
-            }
-            String message = null;
-            TransactionMessage transactionMessage = new TransactionMessage(words, fromAddress, toAddress, amount, new BigInteger("50000"), nrgPrice);
-            message = transactionMessage.getMessage();
-            return ResponseUtils.normalResponse((null == message) ? "" : message);
-        } catch (Exception e) {
-            logger.error("newSignMessage handle error:{}", e);
             return ResponseUtils.handleExceptionResponse();
         }
     }
