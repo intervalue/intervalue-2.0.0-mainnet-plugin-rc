@@ -17,7 +17,7 @@ public class TxListTest {
         data.put("offset","0");//optional parameter,default is "0"
         String result = null;
         try {
-            String url = "http://localhost:" + Config.DEFAULT_HTTP_PORT + Config.GET_MESSAGE_LIST_URI;
+            String url = "http://35.170.77.230:" + Config.DEFAULT_HTTP_PORT + Config.GET_MESSAGE_LIST_URI;
             result = HttpUtils.httpPost(url, data);
             System.out.println("get message list result:" + result);
         } catch (Exception e) {

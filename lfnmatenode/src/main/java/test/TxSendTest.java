@@ -16,7 +16,7 @@ public class TxSendTest {
         data.put("message", JSON.toJSONString(data.get("message")));
         String result = null;
         try {
-            String url = "http://localhost:" + Config.DEFAULT_HTTP_PORT + Config.SEND_MESSAGE_URI;
+            String url = "http://35.170.77.230:" + Config.DEFAULT_HTTP_PORT + Config.SEND_MESSAGE_URI;
             result = HttpUtils.httpPost(url, data);
             System.out.println("send message result:" + result);
         } catch (Exception e) {

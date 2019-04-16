@@ -15,7 +15,7 @@ public class TxInfoTest {
         data.put("hash", hash);
         String result = null;
         try {
-            String url = "http://localhost:" + Config.DEFAULT_HTTP_PORT + Config.GET_MESSAGE_URI;
+            String url = "http://35.170.77.230:" + Config.DEFAULT_HTTP_PORT + Config.GET_MESSAGE_URI;
             result = HttpUtils.httpPost(url, data);
             System.out.println("get message info result:" + result);
         } catch (Exception e) {
