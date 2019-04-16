@@ -3,8 +3,6 @@
  */
 "use strict";
 const TransactionsModel = require('../../common/model').Transactions;
-const common = require('../../../util/common')
-const Accounts_messages = require('../../common/model').Accounts_messages;
 const config = require('../../../util/config');
 const base64 = require('../../../util/base64Code');
 
