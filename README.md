@@ -15,7 +15,7 @@ The diamondnode contains a full ledge which is retrieved after reaching a consen
 
 
 ## lfnmatenode
-The lfnmatenode provides a ease-of-use approach to generate wallet,commit transactions and have access to diamondnode to verify final transaction state.
+The lfnmatenode provides an ease-of-use approach to generate wallet,commit transactions and have access to diamondnode to verify final transaction state.
 
 ### installation/configuration/starting instruction
 * install jdk 1.8.0_181 or above
